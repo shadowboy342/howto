@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model News {
+  id             String   @id @default(cuid())
+  title          String
+  summary        String
+  url            String   @unique
+  imageUrl       String?
+  sourceName     String
+  category       String
+  country        String
+  latitude       Float
+  longitude      Float
+  publishedAt    DateTime
+  dedupHash      String   @unique
+  apiProvider    String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([publishedAt])
+  @@index([country])
+  @@index([category])
+}

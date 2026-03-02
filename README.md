@@ -1,70 +1,96 @@
-# How to
+# Middle East Live News Map (Arabic, RTL, Production-Oriented)
 
-I've long been under the illusion that building websites is easy and that just about anyone can do it. I am still under that illusion of course (please see the previous sentence), but more and more I have found that doing it requires a lot of reference. This is a attempt at keeping all of my references and decisions in one place.
+منصة أخبار تفاعلية تعتمد على خريطة حية للشرق الأوسط. كل خبر حديث يظهر كنقطة جغرافية (Marker) على الخريطة مع نافذة منبثقة تحتوي على:
+- عنوان الخبر
+- صورة مميزة (إن توفرت)
+- ملخص
+- تاريخ/وقت النشر
+- المصدر
+- رابط المقال الأصلي
 
-Please note: much of this should be considered wrong. Also, very much of it will be suboptimal. The goal is to build something that performs reasonably well while maximizing the ability to make changes.
+## المعمارية
 
-Also, I break all of my own rules all the time.
+- **Frontend**: React + Vite + Leaflet (RTL + تصميم متجاوب + وضع ليلي)
+- **Backend**: Node.js + Express + Cron + Caching
+- **Database**: PostgreSQL مع Prisma
+- **News APIs (حقيقية)**:
+  - GDELT (يعمل بدون مفتاح غالبًا)
+  - NewsAPI (اختياري بمفتاح)
+  - GNews (اختياري بمفتاح)
 
-## Working with Ruby and Ruby on Rails
+## ميزات أساسية
 
-Here is the rough table of contents that I want to cover:
+- تمركز الخريطة وحدودها داخل الشرق الأوسط فقط.
+- تحديث تلقائي للأخبار كل 10 دقائق (يمكن تخصيصه).
+- فلترة حسب التصنيف/الدولة + بحث نصي.
+- إزالة التكرار عبر `dedupHash` + `url` فريد.
+- فلترة الأخبار الأحدث فقط (آخر 24–48 ساعة حسب الإعداد).
+- واجهة عربية RTL بالكامل.
+- صفحة تفاصيل خبر.
+- لوحة إدارة بسيطة:
+  - تحديث يدوي للأخبار
+  - إحصائيات حسب التصنيف والدولة
+- Fallback تلقائي عند فشل أي API مزود.
 
-* Getting your development environment setup
-* [Starting a Rails app](starting_a_rails_app.md) Basic start and repository
-* [Git](git.md) Making changes and reviewing code
-* [Vagrant](vagrant.md) Testing server infrastructure locally
-* [Provisioning](provisioning.md) Chef, Berkshelf, knife, etc. etc.
-* The Cloud
-* Deploying to Heroku
-* Deploying to Linode
-* Deploying to AWS
-* The Asset Pipeline
-* Databases
-* Patterns (http://blog.codeclimate.com/blog/2012/10/17/7-ways-to-decompose-fat-activerecord-models/)
-  * Value Objects
-  * Service Objects
-  * Query Objects
-  * Form Objects
-  * View Objects
-  * Policy Objects
-* CDNs
-* Background jobs and workers
-* Cron
-* Errors
-* Authentication
-* Google, Twitter, Facebook, OAuth and you
-* Notifications
-* Mobile
-* Uploading things
-* Analytics
-* Performance (measure)
-* Monitoring
-* Backups
-* Google Analytics
-* Admin
-* SSL
-* A/B testing
-* Rollout features
-* Realtime Stuff
+## تشغيل محلي سريع
 
-Style
------
-* Bootstrap and friends
-* Grids
-* Uikit
-* Responsive design
+## 1) المتطلبات
+- Node.js 20+
+- PostgreSQL 14+
 
-JavaScript
-----------
-* jQuery
-* Backbone
-* Angular
+## 2) إعداد الخلفية
+```bash
+cd backend
+cp .env.example .env
+npm install
+npx prisma generate
+npx prisma migrate dev --name init
+npm run dev
+```
 
-Other
------
-* Feedback
-* Support
-* olark
-* Google Apps
+## 3) إعداد الواجهة
+```bash
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
+```
 
+ثم افتح: `http://localhost:5173`
+
+## Docker
+
+```bash
+cp backend/.env.example backend/.env
+docker compose up --build
+```
+
+## متغيرات البيئة
+
+### backend/.env
+- `DATABASE_URL` (إلزامي)
+- `NEWS_API_KEY` (اختياري)
+- `GNEWS_API_KEY` (اختياري)
+- `ADMIN_TOKEN` (إلزامي للإدارة)
+- `REFRESH_CRON` (مثال: `*/10 * * * *`)
+- `NEWS_WINDOW_HOURS` (افتراضي: 48)
+
+### frontend/.env
+- `VITE_API_BASE_URL` (افتراضي: `http://localhost:4000/api`)
+
+## النشر
+
+### Vercel (Frontend)
+- ارفع مجلد `frontend`
+- عيّن `VITE_API_BASE_URL` إلى رابط الـ API المنشور
+
+### Backend على VPS/Docker
+- شغّل `backend` مع PostgreSQL
+- فعّل `NODE_ENV=production`
+- نفّذ `npx prisma migrate deploy`
+- اضبط Reverse Proxy (Nginx) + HTTPS
+
+## ملاحظات إنتاجية
+- استخدم مفاتيح API حقيقية في `.env`.
+- في حال غياب مفاتيح NewsAPI/GNews سيستمر النظام عبر GDELT كخيار بديل.
+- يوصى بإضافة Rate Limiting وWAF عند النشر العام.
